@@ -2,6 +2,8 @@
 
 > 如果不了解promise。或者对promise了解不够深入的可以看下这个文件同级目录下的knowPromise.md文件
 
+> 也可以查看[Promises/A+](https://promisesaplus.com/) 官方文档
+
 ### 搭建环境
 
 #### 生成package.json
@@ -860,6 +862,12 @@ npm install promises-aplus-tests -g
 ```
 测试：
 promises-aplus-tests bundle.js
+
+测试结果如下：
+
+![tests](./src/img/test.png)
+
+可以看到测试通过，符合Promises/A+规范
 
 
 
