@@ -9,7 +9,7 @@
 //1、普通值  调用then方法会返回一个全新的promise（不能返回this，因为状态不可逆，所以只能是新的promise）
  
 
-const Promise = require('./bundle.js')
+const Promise = require('./../../dist/bundle.js')
 let promise2 = new Promise((resolve,reject)=>{
     resolve('ok')
 }).then(data =>{

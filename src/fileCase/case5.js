@@ -1,5 +1,5 @@
 
-// const Promise = require('./bundle.js')
+// const Promise = require('./../../dist/bundle.js')
 // let promise = new Promise((resolve,reject)=>{
 //     resolve('ok')
 // }).then(data=>{
@@ -14,7 +14,7 @@
 // })
 
 
-const Promise = require('./bundle.js')
+const Promise = require('./../../dist/bundle.js')
 let promise = new Promise((resolve,reject)=>{
     resolve('ok')
 }).then(data=>{

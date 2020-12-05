@@ -89,7 +89,8 @@ npm install ts-node -g
 
 进入正题：
 
-#### 手写promise
+### 手写promise
+
 
 promise构造函数的理解：
 
@@ -588,6 +589,14 @@ function resolvePromise(promise2,x,resolve,reject){
         return promise2
     }
 ```
+
+```
+then里面的FULFILLED/REJECTED状态时，为什么要加setTimeout，用setTimeout模拟实现微任务 ?
+ 原因如下：
+    - Promises/A+规范 要确保 onFulfilled 和 onRejected 方法异步执行(且应该在 then 方法被调用的那一轮事件循环之后的新执行栈中执行) 所以要在resolve里加上setTimeout
+   - Promises/A+规范 对于一个promise，它的then方法可以调用多次.（当在其他程序中多次调用同一个promise的then时，由于之前状态已经为FULFILLED/REJECTED状态，则会走的下面逻辑),所以要确保为FULFILLED/REJECTED状态后，需要异步执行onFulfilled/onRejected
+   - 当然也可以使用，queueMicrotask来实现微任务 
+```    
 (2)判断x的值 和promise2的关系
    -  如果x和promise2指向同一个对象，则抛错（If promise and x refer to the same object, reject promise with a TypeError as the reason.）
 ```js
@@ -869,6 +878,84 @@ promises-aplus-tests bundle.js
 
 可以看到测试通过，符合Promises/A+规范
 
+#### 实现Promises/A+规范外的方法
+
+- 自己实现一个Promise.deferred()  (延迟对象)
+  
+```js
+Promise.deferred = function () {
+    let dfd = {} as any;
+    dfd.promise = new Promise((resolve,reject)=>{
+        dfd.resolve = resolve;
+        dfd.reject = reject;
+    })
+    return dfd;
+}
+```
+例子：
+
+```js
+function read(url){
+    let dfd = Promise.deferred();//延迟对象
+    fs.readFile(url,'utf8',function(err,data){
+        if(err) dfd.reject(err);
+        dfd.resolve(data)
+    })
+   return dfd.promise;
+ }
+ 
+ read('../name.txt').then((data=>{
+     return read('../'+data)
+ })).then(data=>{
+     console.log(data)
+ })
+```
+> name.txt里面内容是age.txt
+> 访问name.txt，如果成功了再访问name.txt返回值对应的文件
+
+- 自己实现一个catch
+
+ ```js
+  //....
+  //实现catch核心代码段
+catch(onRejected){
+    return this.then(null,onRejected)
+}
+ ```
+
+ ```js
+function read(url){
+    let dfd = Promise.deferred();//延迟对象
+    fs.readFile(url,'utf8',function(err,data){
+        if(err) dfd.reject(err);
+        dfd.resolve(data)
+    })
+   return dfd.promise;
+ }
+ 
+ read('/Users/yinxia/promise/src/name.txt').then((data=>{
+     return read('/Users/yinxia/promise/src/'+data+1)
+ })).then(data=>{
+     console.log(data)
+ }).catch(err=>{
+     console.log(err,'失败')
+ }).then(data=>{
+     console.log(data)
+ })
+
+ //结果如下：
+ [Error: ENOENT: no such file or directory, open '/Users/yinxia/promise/src/age.txt1'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/yinxia/promise/src/age.txt1'
+} 失败
+undefined
+ ```
+ > catch本质上就是一个then，只是catch是没有成功函数的then
+ > 如果reject后，下一个then没有catch,则依次往后找catch,直到找到catch,然后后面如果还有then就接着往下走
+
+- 实现Promise.all(iterable)
 
 
 

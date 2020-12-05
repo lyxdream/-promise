@@ -1,7 +1,7 @@
 
 //当then返回一个promise时,
 // 判断x的值 和promise2的关系
-const Promise = require('./bundle.js')
+const Promise = require('./../../dist/bundle.js')
 let promise2 = new Promise((resolve,reject)=>{
     resolve('ok')
 }).then(data=>{
@@ -17,7 +17,7 @@ promise2.then(data=>{
 // ----------------
 
 //x.then中抛出的异常的结果e，就以e作为promise失败的reason
-// const Promise = require('./bundle.js');
+// const Promise = require('./../../dist/bundle.js')
 // let resultObj = {};
 // Object.defineProperty(resultObj,'then',{
 //     get(){

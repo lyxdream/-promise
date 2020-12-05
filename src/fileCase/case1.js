@@ -14,7 +14,7 @@
 
 
 
-const Promise = require('./bundle.js')
+const Promise = require('./../../dist/bundle.js')
 let promise = new Promise((resolve,reject)=>{
     // console.log(1)
     // reject('失败')

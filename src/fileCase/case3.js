@@ -7,7 +7,7 @@
 //     .then((x) => console.log(x))
 //     .catch(console.error)
 //当then返回一个promise时
-const Promise = require('./bundle.js')
+const Promise = require('./../../dist/bundle.js')
 let promise = new Promise((resolve,reject)=>{
     resolve('ok')
 }).then(data=>{

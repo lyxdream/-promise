@@ -89,10 +89,12 @@ var Promise = /** @class */ (function () {
         var promise2 = new Promise(function (resolve, reject) {
             if (_this.status == "FULFILLED" /* fulfilled */) {
                 setTimeout(function () {
+                    //添加setTimeout是为了模拟微任务，在调用的那一轮事件循环之后的新执行栈中执行resolvePromise(promise2,x,resolve,reject)，
+                    //如果不加setTimeout则获取不到promise2
                     try {
-                        //是个常量的时候
+                        //是个普通值的时候
                         var x = onFulfilled(_this.value);
-                        // console.log(promise2)
+                        // console.log(promise2)  
                         resolvePromise(promise2, x, resolve, reject);
                         // resolve(x)  //用then的返回值，作为下一次成功结果
                     }
@@ -149,6 +151,10 @@ var Promise = /** @class */ (function () {
             }
         });
         return promise2;
+    };
+    //实现catch
+    Promise.prototype.catch = function (onRejected) {
+        return this.then(null, onRejected);
     };
     return Promise;
 }());

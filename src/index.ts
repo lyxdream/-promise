@@ -92,10 +92,12 @@ function resolvePromise(promise2,x,resolve,reject){
         let promise2 = new Promise((resolve,reject)=>{
             if(this.status == STATUS.fulfilled){
                 setTimeout(() => {
+                    //添加setTimeout是为了模拟微任务，在调用的那一轮事件循环之后的新执行栈中执行resolvePromise(promise2,x,resolve,reject)，
+                    //如果不加setTimeout则获取不到promise2
                     try{
-                        //是个常量的时候
+                        //是个普通值的时候
                         let x = onFulfilled(this.value); 
-                        // console.log(promise2)
+                        // console.log(promise2)  
                         resolvePromise(promise2,x,resolve,reject)
                         // resolve(x)  //用then的返回值，作为下一次成功结果
                     }catch(e){
@@ -152,6 +154,10 @@ function resolvePromise(promise2,x,resolve,reject){
             }
         })
         return promise2
+    }
+    //实现catch
+    catch(onRejected){
+        return this.then(null,onRejected)
     }
  }
  //---------测试是否符合Promise/A+规范

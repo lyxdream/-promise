@@ -1,5 +1,5 @@
 
-const Promise = require('./bundle.js')
+const Promise = require('./../../dist/bundle.js')
 let p = new Promise((resolve,reject)=>{
     resolve('ok')
 })
