@@ -59,6 +59,10 @@ var Promise = /** @class */ (function () {
         this.onResolvedCallbacks = []; //成功回调的函数集合
         this.onRejectedCallbacks = []; //失败回调的函数集合
         var resolve = function (value) {
+            if (value instanceof Promise) {
+                return value.then(resolve, reject); //递归解析resolve中的promise
+                //如果成功了就递归调resolve，如果失败了就调reject
+            }
             if (_this.status == "PENDING" /* pending */) {
                 _this.status = "FULFILLED" /* fulfilled */;
                 _this.value = value;
@@ -155,6 +159,16 @@ var Promise = /** @class */ (function () {
     //实现catch
     Promise.prototype.catch = function (onRejected) {
         return this.then(null, onRejected);
+    };
+    Promise.resolve = function (val) {
+        return new Promise(function (resolve, reject) {
+            resolve(val);
+        });
+    };
+    Promise.reject = function (reason) {
+        return new Promise(function (resolve, reject) {
+            reject(reason);
+        });
     };
     return Promise;
 }());

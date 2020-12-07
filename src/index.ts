@@ -63,6 +63,10 @@ function resolvePromise(promise2,x,resolve,reject){
         this.onResolvedCallbacks = [];//成功回调的函数集合
         this.onRejectedCallbacks = [];//失败回调的函数集合
         const resolve = (value?:any)=>{
+            if(value instanceof Promise){ 
+               return value.then(resolve,reject) //递归解析resolve中的promise
+               //如果成功了就递归调resolve，如果失败了就调reject
+            }
             if(this.status==STATUS.pending){
                 this.status = STATUS.fulfilled;
                 this.value = value;
@@ -159,6 +163,17 @@ function resolvePromise(promise2,x,resolve,reject){
     catch(onRejected){
         return this.then(null,onRejected)
     }
+    static resolve(val){
+        return new Promise((resolve,reject)=>{
+            resolve(val)
+        })
+    }
+    static reject(reason){
+        return new Promise((resolve,reject)=>{
+            reject(reason)
+        })
+    }
+
  }
  //---------测试是否符合Promise/A+规范
 Promise.deferred = function () {

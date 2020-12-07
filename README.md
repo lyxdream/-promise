@@ -1047,15 +1047,195 @@ Promise.all([read('./name.txt','utf8'),read('./age.txt','utf8'),0]).then((data)=
 })
 // [ 'yx', '20', 0 ]
 ```
+**resolve如果是Promise**
+
+核心代码：
+```js
+//resolve如果是Promise的时候，因为规范里的规定，只考虑是自己的promise，不用考虑是第三方库的，只有then的时候需要考虑是第三方库的
+ const resolve = (value?:any)=>{
+    if(value instanceof Promise){  //递归解析resolve中的promise
+        return value.then(resolve,reject)
+    }
+    if(this.status==STATUS.pending){
+        this.status = STATUS.fulfilled;
+        this.value = value;
+        //发布模式
+        this.onResolvedCallbacks.forEach(fn=>fn());
+    }
+  }
+```
+例子：
+
+```js
+const Promise = require('./../../dist/bundle.js')
+const promise = new Promise((resolve,reject)=>{
+    resolve(new Promise((resolve,reject)=>{  //这里只是自己的promise，不兼容其他
+        setTimeout(()=>{
+            resolve('ok')
+        },0)
+    }))
+})
+
+promise.then(data=>{
+    console.log(data)
+})
+//ok
+```
+**reject如果是Promise**
 
 
+```js
+const Promise = require('./../../dist/bundle.js')
+onst promise = new Promise((resolve,reject)=>{
+    reject(new Promise((resolve,reject)=>{  //这里只是自己的promise，不兼容其他
+        setTimeout(()=>{
+            resolve('ok')
+        },0)
+    }))
+})
+
+promise.then(data=>{
+    console.log(data)
+}).catch((err)=>{
+    console.log('err',err)
+})
+//输出结果
+err Promise {
+  status: 'FULFILLED',
+  value: 'ok',
+  reason: undefined,
+  onResolvedCallbacks: [],
+  onRejectedCallbacks: []
+}
+
+```
+**结论：**
+> promise中resolve一个promise会有等待效果，等待promise成功或者失败
+
+> promise中reject一个值，直接走失败
+
+**Promise.resolve和Promise.reject**
+实现：
+```js
+    static resolve(val){
+        return new Promise((resolve,reject)=>{
+            resolve(val)
+        })
+    }
+    static reject(reason){
+        return new Promise((resolve,reject)=>{
+            reject(reason)
+        })
+    }
+```
+例子：
+
+```js
+
+Promise.resolve('ok').then(data=>{
+    console.log(data)
+}).catch(e=>{
+    console.log(e)
+})
+//ok
 
 
+Promise.reject('fail').then(data=>{
+    console.log(data)
+}).catch(e=>{
+    console.log(e)
+})
+//fail
+```
 
+**Promise.prototype.finally()**
 
+- finally() 方法返回一个Promise。在promise结束时，无论结果是fulfilled或者是rejected，都会执行指定的回调函数
+```js
+Promise.resolve('ok').finally(()=>{
+    console.log("1")
+    return 100//finally返回的结果不会影响后续逻辑
+}).then(data=>{
+    console.log('success',data)
+}).catch(e=>{
+    console.log('error',e)
+})
+//1
+//success ok
+/*
+总结：
+虽然finally返回了100，但是对后续逻辑没影响，后面还是打印了1 ok
+*/
+Promise.reject('ok').finally(()=>{
+    console.log("1")
+}).then(data=>{
+    console.log('success',data)
+}).catch(e=>{
+    console.log('error',e)
+})
+//1
+// error ok
+```
+> 总结：可以看到不管是Promise.reject()还是Promise.resolve()都会执行finally里面的console.log("1")
 
+- finally里面如果return一个promise，会等待promise执行完，如果成功了不采用成功的结果，如果失败了采用失败的结果
 
+```js
+// ----------走成功的时候
+Promise.resolve('ok').finally(()=>{
+    console.log("1")
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>{
+            resolve('in')
+        },0)
+    })
+}).then(data=>{
+    console.log('success',data)
+}).catch(e=>{
+    console.log('error',e)
+})
+// 1
+// success ok
 
+// ----------走失败的时候
+
+Promise.resolve('ok').finally(()=>{
+    console.log("1")
+    return new Promise((resolve,reject)=>{
+            setTimeout(()=>{
+                reject('in')
+            },0)
+        })  
+}).then(data=>{
+    console.log('success',data)
+}).catch(e=>{
+    console.log('error',e)
+})
+// 1
+// error in
+
+Promise.reject('ok').finally(()=>{
+    console.log("1")
+    return new Promise((resolve,reject)=>{
+            setTimeout(()=>{
+                reject('in')
+            },0)
+        })  
+}).then(data=>{
+    console.log('success',data)
+}).catch(e=>{
+    console.log('error',e)
+})
+// 1
+// error in
+```
+总结：return走成功(resolve)时,后面的then不会采用return出去的结果，但是如果return走成功(reject)时,后面的catch不会采用return出去的结果。
+
+手写Promise.prototype.finally()
+
+```js
+
+```
 
 
 

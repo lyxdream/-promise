@@ -29,3 +29,11 @@ function isPromise(){
     return false;
 }
 
+//3、js代码 他看的并不是看声明在哪个位置，而是看执行时此代码是否已经执行了
+
+function b(){
+    console.log(a)
+}
+let a =2;
+b();
+//2
