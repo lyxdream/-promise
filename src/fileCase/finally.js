@@ -59,7 +59,7 @@ Promise.prototype.finally = function(callback){
 
 
 // 如果走失败，如下例子：romise.reject('ok').finally()的时候，
-// 在成功的onRejected里，等待callback执行完毕，
+
 
 // (1)如果如果callback里面抛出错误，则then(()=>data)只传了then一个回调函数（onFulfilled），并没有失败的回调函数，（如果有失败的回调函数，则会在这块捕获错误，）所以会被下个catch接收
 // Promise.reject('ok').finally(()=>{
