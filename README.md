@@ -92,6 +92,7 @@ npm install ts-node -g
 ### 手写promise
 
 
+
 promise构造函数的理解：
 
 1、构造函数有个状态属性，有三种状态
@@ -118,8 +119,22 @@ const enum STATUS{  //存放所需要的状态
             this.value = reason;
         }    
     }
-```
 
+```
+**promise的常见方法**
+
+```js
+Promise.prototype.then()
+Promise.prototype.catch()
+Promise.prototype.finally()
+Promise.reject()
+Promise.resolve()
+Promise.all()
+Promise.race()
+// 新增的两个
+Promise.allSettled()
+Promise.any()
+```
 3、关于promise.then的理解：
 
 >  onFulfilled 是Promise.then传入的第一个参数
@@ -1245,7 +1260,7 @@ Promise.prototype.finally = function(callback){
     return this.then((data)=>{
         //等待promise执行完毕 // 等待callback执行完毕之后
         // console.log(Promise.resolve(callback()))
-       return Promise.resolve(callback()).then((data)=>data);
+       return Promise.resolve(callback()).then(()=>data);
     },(err)=>{
         // console.log(Promise.resolve(callback()).then(()=>{console.log(err)}))
         return Promise.resolve(callback()).then(()=>{throw err})
@@ -1342,6 +1357,239 @@ Promise.reject('ok').finally(()=>{
 1）如果callback里面抛出错误，则then(()=>xxx)只传了then一个回调函数（onFulfilled），并没有失败的回调函数，（如果有失败的回调函数，则会在这块捕获错误，）所以会被下个catch接收
 
 2)不管调finally之前是成功还是失败，如果callback里面return 一个普通值，或者return一个成功状态的promise，则走then(()=>throw err)抛出reason给下个catch,或者走then(()=>data),这样就会返回前面的'ok'
+
+
+**Promise.race**
+
+> 谁先执行完毕就用谁的结果，那个率先改变的 Promise 实例的返回值，就传递那个给p的回调函数。
+
+```js
+let p1 = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+        resolve(1)
+    },1000)
+})
+
+let p2 = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+        reject('fail')
+    },500)
+})
+// //谁先执行完毕就用谁的结果，那个率先改变的 Promise 实例的返回值，就传递那个给p的回调函数。
+Promise.race([p1,p2]).then(data=>{
+    console.log(data)
+}).catch(e=>{
+    console.log(e)
+})
+//fail
+```
+> Promise.race能解决什么问题:超时，中断
+
+```js
+let abort;
+let promise = new Promise((resolve,reject)=>{
+    abort = reject;
+    setTimeout(()=>{
+        resolve('ok')
+    },3000)
+})
+
+setTimeout(()=>{
+    abort('超时')
+},2000)
+
+promise.catch(err=>{
+    console.log(err)
+})
+//超时
+```
+
+> 优化后的
+
+```js
+let promise = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+        // console.log('111111')
+        resolve('ok')
+    },1000)
+})
+function wrap(p){
+    let abort;
+    let p2 = new Promise((resolve,reject)=>{
+       abort = reject;
+    })
+    let p3 = Promise.race([p,p2]);//能控制p的状态，主要是利用p2的reject
+    //谁先执行完毕就采用谁的结果，p3就采用谁的结果，虽然没采用p的结果，但是p还是会执行
+    p3.abort = abort;
+    return p3;
+}
+
+let p = wrap(promise);
+setTimeout(()=>{
+    p.abort('超时')  //如果超时，就会走p2的reject，则就不会采用wrap(p)的p的结果
+},500)
+
+p.then((data)=>{
+    console.log(data)
+}).catch(err=>{
+    console.log(err,'fail')
+})
+//超时 fail
+```
+Promise.race源码实现
+
+```js
+Promise.race = function(values){
+    // console.log(values)
+    function isPromise(x){
+        if((typeof x==='object' && x!=null) || typeof x==='function'){
+            if(typeof x.then =='function'){
+                return true;
+            }
+        }
+        return false;
+    }
+    return new Promise((resolve,reject)=>{
+        for(let i=0;i<values.length;i++){
+            let value = values[i];
+            if(value&&isPromise(value)){
+                value.then((y)=>{
+                    //y是promise返回的值
+                    //y i
+                    resolve(y)
+                },(err)=>{
+                    reject(err)
+                })
+            }else{
+                resolve(value)
+            }
+        }
+    })
+}
+
+```
+
+**Promise.allSettled**
+
+> es2020引入
+> 只有等到所有这些参数实例都返回结果(不管是fulfilled还是rejected)，才会结束
+
+```js
+let p1 = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+        resolve(1)
+    },1000)
+})
+
+let p2 = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+        reject('fail')
+    },500)
+})
+
+//只有等到所有这些参数实例都返回结果，不管是fulfilled还是rejected，才会结束
+Promise.allSettled([p1,p2]).then((data)=>{
+    console.log(data)
+},(err)=>{
+    console.log(err)
+}
+)
+```
+运行结果如下：
+```
+[
+  { status: 'fulfilled', value: 1 },
+  { status: 'rejected', reason: 'fail' }
+]
+```
+> 注意：可以看出，只走then的成功回调函数onFulfilled，不会走onRejected,而且不管实例失败成功都会返回来
+
+手写源码
+
+```js
+
+//
+Promise.allSettled = function(values){
+    function isPromise(x){
+        if((typeof x==='object' && x!=null) || typeof x==='function'){
+            if(typeof x.then =='function'){
+                return true;
+            }
+        }
+        return false;
+   }
+    return new Promise((resolve,reject)=>{
+        let arr = [];//收集传入的项运行结果
+        let times =0;//调用的次数和传入的参数个数一致的时候，resolve
+        function collectResult(val,key,obj){
+            arr[key] = obj;
+         //注意这里不能用arr.length计数，因为先成功的会是不是promise的项，这个例子中先成功的是0,0成功之后，arr的length已经为3，就会直接resolve
+            if(++times === values.length){
+                resolve(arr)
+            }
+        }
+        for(let i=0;i<values.length;i++){
+            let value = values[i];
+            let obj = {
+                status:"pending"
+            };
+            if(value&&isPromise(value)){
+                value.then((y)=>{
+                    //y是promise返回的值
+                    //y i
+                    obj.status = "fulfilled";
+                    obj.value = y;
+                    // console.log(y)
+                    collectResult(y,i,obj)
+                },(err)=>{
+                    obj.status = "rejected";
+                    obj.reason = err;
+                    collectResult(err,i,obj)
+                })
+            }else{
+                //value i
+                obj.status = "fulfilled";
+                obj.value = value;
+                collectResult(value,i,obj)
+            }
+        }
+    })
+}
+```
+
+
+
+> 验证
+
+```js
+let p1 = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+        resolve(1)
+    },1000)
+})
+
+let p2 = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+        reject('fail')
+    },500)
+})
+Promise.allSettled([p1,p2]).then((data)=>{
+    console.log(data)
+},(err)=>{
+    console.log(err)
+}
+)
+```
+结果如下：
+```
+[
+  { status: 'fulfilled', value: 1 },
+  { status: 'rejected', reason: 'fail' }
+]
+```
+
+
+
 
 
 

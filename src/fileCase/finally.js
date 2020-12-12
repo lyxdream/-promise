@@ -7,7 +7,7 @@ Promise.prototype.finally = function(callback){
     return this.then((data)=>{
         //等待promise执行完毕 // 等待callback执行完毕之后
         // console.log(Promise.resolve(callback()))
-       return Promise.resolve(callback()).then((data)=>data);
+       return Promise.resolve(callback()).then(()=>data);
     },(err)=>{
         console.log(Promise.resolve(callback()).then(()=>{console.log(err)}))
         return Promise.resolve(callback()).then(()=>{throw err})
@@ -99,8 +99,6 @@ Promise.prototype.finally = function(callback){
 
 // 总结：（1）如果callback里面抛出错误，则then(()=>xxx)只传了then一个回调函数（onFulfilled），并没有失败的回调函数，（如果有失败的回调函数，则会在这块捕获错误，）所以会被下个catch接收
 //       (2)如果callback里面return 一个普通值，或者return一个成功状态的promise，则走then(()=>throw err)抛出reason给下个catch,或者走then(()=>data),这样就会返回前面的'ok'
-
-
 
 
 

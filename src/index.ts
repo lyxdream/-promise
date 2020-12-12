@@ -163,6 +163,15 @@ function resolvePromise(promise2,x,resolve,reject){
     catch(onRejected){
         return this.then(null,onRejected)
     }
+   finally(callback){
+        return this.then((data)=>{
+            //等待promise执行完毕 // 等待callback执行完毕之后
+           return Promise.resolve(callback()).then(()=>data);
+        },(err)=>{
+            // console.log(Promise.resolve(callback()).then(()=>{console.log(err)}))
+            return Promise.resolve(callback()).then(()=>{throw err})
+        })
+    }
     static resolve(val){
         return new Promise((resolve,reject)=>{
             resolve(val)
