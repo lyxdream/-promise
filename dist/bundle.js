@@ -59,10 +59,6 @@ var Promise = /** @class */ (function () {
         this.onResolvedCallbacks = []; //成功回调的函数集合
         this.onRejectedCallbacks = []; //失败回调的函数集合
         var resolve = function (value) {
-            if (value instanceof Promise) {
-                return value.then(resolve, reject); //递归解析resolve中的promise
-                //如果成功了就递归调resolve，如果失败了就调reject
-            }
             if (_this.status == "PENDING" /* pending */) {
                 _this.status = "FULFILLED" /* fulfilled */;
                 _this.value = value;
@@ -93,12 +89,10 @@ var Promise = /** @class */ (function () {
         var promise2 = new Promise(function (resolve, reject) {
             if (_this.status == "FULFILLED" /* fulfilled */) {
                 setTimeout(function () {
-                    //添加setTimeout是为了模拟微任务，在调用的那一轮事件循环之后的新执行栈中执行resolvePromise(promise2,x,resolve,reject)，
-                    //如果不加setTimeout则获取不到promise2
                     try {
-                        //是个普通值的时候
+                        //是个常量的时候
                         var x = onFulfilled(_this.value);
-                        // console.log(promise2)  
+                        // console.log(promise2)
                         resolvePromise(promise2, x, resolve, reject);
                         // resolve(x)  //用then的返回值，作为下一次成功结果
                     }
@@ -155,20 +149,6 @@ var Promise = /** @class */ (function () {
             }
         });
         return promise2;
-    };
-    //实现catch
-    Promise.prototype.catch = function (onRejected) {
-        return this.then(null, onRejected);
-    };
-    Promise.resolve = function (val) {
-        return new Promise(function (resolve, reject) {
-            resolve(val);
-        });
-    };
-    Promise.reject = function (reason) {
-        return new Promise(function (resolve, reject) {
-            reject(reason);
-        });
     };
     return Promise;
 }());

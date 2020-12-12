@@ -1,7 +1,6 @@
 const STATUS = { PENDING: 'PENDING', FUFILLED: 'FUFILLED', REJECTED: 'REJECTED' }
 
 function resolvePromise(x, promise2, resolve, reject) {
-    console.log('my')
     if (promise2 == x) {
         return reject(new TypeError('出错了'))
     }
@@ -33,7 +32,6 @@ function resolvePromise(x, promise2, resolve, reject) {
 }
 class Promise {
     constructor(executor) {
-         
         this.status = STATUS.PENDING;
         this.value = undefined;
         this.reason = undefined;

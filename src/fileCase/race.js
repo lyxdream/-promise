@@ -1,5 +1,5 @@
 
-
+const Promise = require('./../../dist/bundle.js')
 let p1 = new Promise((resolve,reject)=>{
     setTimeout(()=>{
         resolve(1)

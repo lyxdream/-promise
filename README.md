@@ -885,6 +885,8 @@ p.then().then().then((data)=>{
 npm install promises-aplus-tests -g
 ```
 测试：
+切换到test目录下：
+
 promises-aplus-tests bundle.js
 
 测试结果如下：
@@ -1508,15 +1510,14 @@ Promise.allSettled([p1,p2]).then((data)=>{
 
 ```js
 
-//
 Promise.allSettled = function(values){
     function isPromise(x){
-        if((typeof x==='object' && x!=null) || typeof x==='function'){
-            if(typeof x.then =='function'){
-                return true;
-            }
+    if((typeof x==='object' && x!=null) || typeof x==='function'){
+        if(typeof x.then =='function'){
+            return true;
         }
-        return false;
+    }
+    return false;
    }
     return new Promise((resolve,reject)=>{
         let arr = [];//收集传入的项运行结果
@@ -1530,26 +1531,29 @@ Promise.allSettled = function(values){
         }
         for(let i=0;i<values.length;i++){
             let value = values[i];
-            let obj = {
-                status:"pending"
-            };
             if(value&&isPromise(value)){
                 value.then((y)=>{
                     //y是promise返回的值
                     //y i
-                    obj.status = "fulfilled";
-                    obj.value = y;
+                    let obj = {
+                        status:"fulfilled",
+                        value:y
+                    }
                     // console.log(y)
                     collectResult(y,i,obj)
                 },(err)=>{
-                    obj.status = "rejected";
-                    obj.reason = err;
+                    let obj = {
+                        status:"rejected",
+                        reason:err
+                    }
                     collectResult(err,i,obj)
                 })
             }else{
                 //value i
-                obj.status = "fulfilled";
-                obj.value = value;
+                let obj = {
+                    status:"fulfilled",
+                    value:value
+                }
                 collectResult(value,i,obj)
             }
         }
@@ -1587,6 +1591,14 @@ Promise.allSettled([p1,p2]).then((data)=>{
   { status: 'rejected', reason: 'fail' }
 ]
 ```
+
+> 备注：
+
+ts实现完整的promise源码可见 [完整源码.ts](./完整源码.ts)
+
+ts实现符合实现符合Promises/A+源码可见 [index.ts](./index.ts)
+
+js实现符合实现promise简易源码可见 [index.js](./index.js)
 
 
 

@@ -1,5 +1,6 @@
 // es2020引入
 
+// const Promise = require('./../../dist/bundle.js')
 let p1 = new Promise((resolve,reject)=>{
     setTimeout(()=>{
         resolve(1)
@@ -44,26 +45,29 @@ Promise.allSettled = function(values){
         }
         for(let i=0;i<values.length;i++){
             let value = values[i];
-            let obj = {
-                status:"pending"
-            };
             if(value&&isPromise(value)){
                 value.then((y)=>{
                     //y是promise返回的值
                     //y i
-                    obj.status = "fulfilled";
-                    obj.value = y;
+                    let obj = {
+                        status:"fulfilled",
+                        value:y
+                    }
                     // console.log(y)
                     collectResult(y,i,obj)
                 },(err)=>{
-                    obj.status = "rejected";
-                    obj.reason = err;
+                    let obj = {
+                        status:"rejected",
+                        reason:err
+                    }
                     collectResult(err,i,obj)
                 })
             }else{
                 //value i
-                obj.status = "fulfilled";
-                obj.value = value;
+                let obj = {
+                    status:"fulfilled",
+                    value:value
+                }
                 collectResult(value,i,obj)
             }
         }
