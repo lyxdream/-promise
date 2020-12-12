@@ -1,4 +1,4 @@
-# 从零手写promise原理
+# 从零手写实现promise源码
 
 > 如果不了解promise。或者对promise了解不够深入的可以看下这个文件同级目录下的knowPromise.md文件
 
