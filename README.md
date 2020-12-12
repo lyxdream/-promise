@@ -1594,11 +1594,11 @@ Promise.allSettled([p1,p2]).then((data)=>{
 
 > 备注：
 
-ts实现完整的promise源码可见 [完整源码.ts](./完整源码.ts)
+ts实现完整的promise源码可见 [完整源码.ts](./src/完整源码.ts)
 
-ts实现符合实现符合Promises/A+源码可见 [index.ts](./index.ts)
+ts实现符合实现符合Promises/A+源码可见 [index.ts](./src/index.ts)
 
-js实现符合实现promise简易源码可见 [index.js](./index.js)
+js实现符合实现promise简易源码可见 [index.js](./src/index.js)
 
 
 
